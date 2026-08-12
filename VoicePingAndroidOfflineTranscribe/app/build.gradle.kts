@@ -18,7 +18,9 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
         ndk {
-            abiFilters += listOf("arm64-v8a", "x86_64")
+            // This fork targets the physical OnePlus 13 (SM8750) and deliberately
+            // ships just its production ABI rather than carrying emulator libraries.
+            abiFilters += "arm64-v8a"
         }
     }
 
@@ -53,6 +55,16 @@ android {
             version = "3.22.1"
         }
     }
+}
+
+tasks.register<Copy>("packageOneplus13Debug") {
+    group = "distribution"
+    description = "Builds the arm64-v8a OnePlus 13 debug APK with a stable, installable name."
+    dependsOn("assembleDebug")
+    from(layout.buildDirectory.dir("outputs/apk/debug"))
+    include("app-debug.apk")
+    rename { "OfflineTranscribeLab-oneplus13-debug.apk" }
+    into(layout.buildDirectory.dir("outputs/apk/oneplus13"))
 }
 
 dependencies {
