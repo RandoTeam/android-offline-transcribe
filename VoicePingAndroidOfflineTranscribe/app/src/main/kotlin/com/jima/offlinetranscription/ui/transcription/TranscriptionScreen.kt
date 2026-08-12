@@ -73,6 +73,7 @@ import androidx.core.content.ContextCompat
 import com.voiceping.offlinetranscription.BuildConfig
 import com.voiceping.offlinetranscription.model.AudioInputMode
 import com.voiceping.offlinetranscription.model.ModelInfo
+import com.voiceping.offlinetranscription.model.PerformanceProfile
 import com.voiceping.offlinetranscription.service.E2ETestResult
 import com.voiceping.offlinetranscription.ui.components.AudioVisualizer
 import com.voiceping.offlinetranscription.ui.components.RecordButton
@@ -197,6 +198,7 @@ fun TranscriptionScreen(viewModel: TranscriptionViewModel, onChangeModel: () -> 
     val translationDownloadStatus by viewModel.translationDownloadStatus.collectAsState()
     val translationSourceLanguage by viewModel.translationSourceLanguage.collectAsState()
     val translationTargetLanguage by viewModel.translationTargetLanguage.collectAsState()
+    val performanceProfile by viewModel.performanceProfile.collectAsState()
 
     var showSettings by remember { mutableStateOf(false) }
     val clipboardManager = LocalClipboardManager.current
@@ -367,6 +369,7 @@ fun TranscriptionScreen(viewModel: TranscriptionViewModel, onChangeModel: () -> 
             translationEnabled = translationEnabled,
             translationSourceLanguage = translationSourceLanguage,
             translationTargetLanguage = translationTargetLanguage,
+            performanceProfile = performanceProfile,
             fullText = viewModel.fullText,
             onCopyText = { clipboardManager.setText(AnnotatedString(viewModel.fullText)) },
             onClearTranscription = { viewModel.clearTranscription() },
@@ -380,6 +383,7 @@ fun TranscriptionScreen(viewModel: TranscriptionViewModel, onChangeModel: () -> 
             onTranslationEnabledChange = { viewModel.setTranslationEnabled(it) },
             onSourceLanguageChange = { viewModel.setTranslationSourceLanguageCode(it) },
             onTargetLanguageChange = { viewModel.setTranslationTargetLanguageCode(it) },
+            onPerformanceProfileChange = { viewModel.setPerformanceProfile(it) },
             onDismiss = { showSettings = false }
         )
     }
@@ -598,6 +602,7 @@ private fun SettingsBottomSheet(
     translationEnabled: Boolean,
     translationSourceLanguage: String,
     translationTargetLanguage: String,
+    performanceProfile: PerformanceProfile,
     fullText: String,
     onCopyText: () -> Unit,
     onClearTranscription: () -> Unit,
@@ -607,6 +612,7 @@ private fun SettingsBottomSheet(
     onTranslationEnabledChange: (Boolean) -> Unit,
     onSourceLanguageChange: (String) -> Unit,
     onTargetLanguageChange: (String) -> Unit,
+    onPerformanceProfileChange: (PerformanceProfile) -> Unit,
     onDismiss: () -> Unit
 ) {
     val sheetState = androidx.compose.material3.rememberModalBottomSheetState()
@@ -648,6 +654,42 @@ private fun SettingsBottomSheet(
                     Icon(Icons.Filled.Delete, contentDescription = null, modifier = Modifier.size(18.dp))
                     Spacer(modifier = Modifier.width(4.dp))
                     Text("Clear")
+                }
+            }
+
+            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+            Text(
+                text = "Performance",
+                style = MaterialTheme.typography.titleSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            var performanceExpanded by remember { mutableStateOf(false) }
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 4.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text("Execution profile")
+                Box {
+                    OutlinedButton(onClick = { performanceExpanded = true }) {
+                        Text(performanceProfile.label)
+                    }
+                    DropdownMenu(
+                        expanded = performanceExpanded,
+                        onDismissRequest = { performanceExpanded = false }
+                    ) {
+                        PerformanceProfile.entries.forEach { profile ->
+                            DropdownMenuItem(
+                                text = { Text(profile.label) },
+                                onClick = {
+                                    onPerformanceProfileChange(profile)
+                                    performanceExpanded = false
+                                }
+                            )
+                        }
+                    }
                 }
             }
 
@@ -988,6 +1030,14 @@ private val COMMON_LANGUAGES = listOf(
     "sv" to "Swedish",
     "uk" to "Ukrainian",
 )
+
+private val PerformanceProfile.label: String
+    get() = when (this) {
+        PerformanceProfile.ECO -> "Eco"
+        PerformanceProfile.BALANCED -> "Balanced"
+        PerformanceProfile.MAX_PERFORMANCE -> "Max Performance"
+        PerformanceProfile.BENCHMARK -> "Benchmark"
+    }
 
 @Composable
 private fun LanguageDropdown(
