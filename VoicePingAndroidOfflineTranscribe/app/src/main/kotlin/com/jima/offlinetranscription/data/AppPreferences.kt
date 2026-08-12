@@ -5,6 +5,7 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
+import androidx.datastore.preferences.core.stringSetPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -24,6 +25,9 @@ class AppPreferences(private val context: Context) {
         private val TRANSLATION_SOURCE_LANGUAGE = stringPreferencesKey("translation_source_language")
         private val TRANSLATION_TARGET_LANGUAGE = stringPreferencesKey("translation_target_language")
         private val PERFORMANCE_PROFILE = stringPreferencesKey("performance_profile")
+        private val AUTONOMOUS_CAPTURE_ENABLED = booleanPreferencesKey("autonomous_capture_enabled")
+        private val AUTONOMOUS_CAPTURE_PAUSED = booleanPreferencesKey("autonomous_capture_paused")
+        private val AUTONOMOUS_CAPTURE_ALLOWLIST = stringSetPreferencesKey("autonomous_capture_allowlist")
     }
 
     private val preferencesData = context.dataStore.data
@@ -42,6 +46,9 @@ class AppPreferences(private val context: Context) {
     val translationSourceLanguage: Flow<String> = preferenceFlow { it[TRANSLATION_SOURCE_LANGUAGE] ?: "en" }
     val translationTargetLanguage: Flow<String> = preferenceFlow { it[TRANSLATION_TARGET_LANGUAGE] ?: "ja" }
     val performanceProfile: Flow<String> = preferenceFlow { it[PERFORMANCE_PROFILE] ?: "BALANCED" }
+    val autonomousCaptureEnabled: Flow<Boolean> = preferenceFlow { it[AUTONOMOUS_CAPTURE_ENABLED] ?: false }
+    val autonomousCapturePaused: Flow<Boolean> = preferenceFlow { it[AUTONOMOUS_CAPTURE_PAUSED] ?: false }
+    val autonomousCaptureAllowlist: Flow<Set<String>> = preferenceFlow { it[AUTONOMOUS_CAPTURE_ALLOWLIST] ?: emptySet() }
 
     suspend fun setSelectedModelId(id: String) {
         context.dataStore.edit { it[SELECTED_MODEL_ID] = id }
@@ -75,5 +82,17 @@ class AppPreferences(private val context: Context) {
 
     suspend fun setPerformanceProfile(profileName: String) {
         context.dataStore.edit { it[PERFORMANCE_PROFILE] = profileName }
+    }
+
+    suspend fun setAutonomousCaptureEnabled(enabled: Boolean) {
+        context.dataStore.edit { it[AUTONOMOUS_CAPTURE_ENABLED] = enabled }
+    }
+
+    suspend fun setAutonomousCapturePaused(paused: Boolean) {
+        context.dataStore.edit { it[AUTONOMOUS_CAPTURE_PAUSED] = paused }
+    }
+
+    suspend fun setAutonomousCaptureAllowlist(packages: Set<String>) {
+        context.dataStore.edit { it[AUTONOMOUS_CAPTURE_ALLOWLIST] = packages.filter { it.isNotBlank() }.toSet() }
     }
 }

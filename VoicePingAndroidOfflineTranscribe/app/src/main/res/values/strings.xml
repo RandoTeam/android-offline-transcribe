@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="autonomous_capture_service_description">Explicit allowlisted local timeline capture. Sensitive fields and secure content are excluded.</string>
     <string name="app_name">VoicePing Offline Transcribe</string>
 </resources>

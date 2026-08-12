@@ -33,4 +33,13 @@ class CapturePolicyTest {
             policy.decision(CaptureCandidate("com.bitwarden"))
         )
     }
+
+    @Test
+    fun bankingLikePackagesAreDeniedEvenWhenExplicitlySelected() {
+        val unsafePolicy = CapturePolicy(allowedPackages = setOf("com.example.bank.mobile"))
+        assertEquals(
+            CaptureDecision.SKIP_DENYLISTED_APP,
+            unsafePolicy.decision(CaptureCandidate("com.example.bank.mobile"))
+        )
+    }
 }

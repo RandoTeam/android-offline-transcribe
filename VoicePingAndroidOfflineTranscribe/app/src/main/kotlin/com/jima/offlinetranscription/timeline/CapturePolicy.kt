@@ -9,7 +9,7 @@ data class CapturePolicy(
     val deniedPackages: Set<String> = DEFAULT_DENYLIST,
 ) {
     fun decision(input: CaptureCandidate): CaptureDecision = when {
-        input.packageName in deniedPackages -> CaptureDecision.SKIP_DENYLISTED_APP
+        input.packageName in deniedPackages || input.packageName.isSensitiveAppPackage() -> CaptureDecision.SKIP_DENYLISTED_APP
         input.isSecureWindow -> CaptureDecision.SKIP_SECURE_WINDOW
         input.containsSensitiveField -> CaptureDecision.SKIP_SENSITIVE_CONTENT
         input.packageName !in allowedPackages -> CaptureDecision.SKIP_NOT_ALLOWLISTED
@@ -28,6 +28,11 @@ data class CapturePolicy(
             "com.1password.android",
         )
     }
+}
+
+private fun String.isSensitiveAppPackage(): Boolean {
+    val normalized = lowercase()
+    return listOf(".bank", ".wallet", ".payment", ".pay.", ".authenticator", ".password").any(normalized::contains)
 }
 
 data class CaptureCandidate(
