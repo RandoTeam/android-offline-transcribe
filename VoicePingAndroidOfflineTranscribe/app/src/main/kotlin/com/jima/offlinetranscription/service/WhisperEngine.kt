@@ -63,6 +63,8 @@ class WhisperEngine(
     val selectedModel: StateFlow<ModelInfo> = _selectedModel.asStateFlow()
     private val _executionProviderStatus = MutableStateFlow(ExecutionProviderStatus())
     val executionProviderStatus: StateFlow<ExecutionProviderStatus> = _executionProviderStatus.asStateFlow()
+    val autonomousCaptureEnabled: Flow<Boolean> get() = preferences.autonomousCaptureEnabled
+    val autonomousCaptureAllowlist: Flow<Set<String>> get() = preferences.autonomousCaptureAllowlist
 
     private val _performanceProfile = MutableStateFlow(PerformanceProfile.BALANCED)
     val performanceProfile: StateFlow<PerformanceProfile> = _performanceProfile.asStateFlow()
@@ -472,6 +474,11 @@ class WhisperEngine(
         _performanceProfile.value = profile
         preferences.setPerformanceProfile(profile.name)
     }
+
+    suspend fun setAutonomousCaptureEnabled(enabled: Boolean) = preferences.setAutonomousCaptureEnabled(enabled)
+
+    suspend fun setAutonomousCaptureAllowlist(packages: Set<String>) =
+        preferences.setAutonomousCaptureAllowlist(packages)
 
     suspend fun setTranslationEnabled(enabled: Boolean) {
         _translationEnabled.value = enabled

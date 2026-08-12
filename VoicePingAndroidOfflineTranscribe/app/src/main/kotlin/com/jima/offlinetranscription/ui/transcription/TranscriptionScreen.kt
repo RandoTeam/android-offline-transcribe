@@ -7,6 +7,7 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.media.projection.MediaProjectionManager
 import android.os.Build
+import android.provider.Settings
 import android.util.Log
 import com.voiceping.offlinetranscription.service.MediaProjectionService
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -45,6 +46,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
@@ -200,6 +202,8 @@ fun TranscriptionScreen(viewModel: TranscriptionViewModel, onChangeModel: () -> 
     val translationTargetLanguage by viewModel.translationTargetLanguage.collectAsState()
     val performanceProfile by viewModel.performanceProfile.collectAsState()
     val executionProviderStatus by viewModel.executionProviderStatus.collectAsState()
+    val autonomousCaptureEnabled by viewModel.autonomousCaptureEnabled.collectAsState(initial = false)
+    val autonomousCaptureAllowlist by viewModel.autonomousCaptureAllowlist.collectAsState(initial = emptySet())
 
     var showSettings by remember { mutableStateOf(false) }
     val clipboardManager = LocalClipboardManager.current
@@ -377,6 +381,8 @@ fun TranscriptionScreen(viewModel: TranscriptionViewModel, onChangeModel: () -> 
             translationSourceLanguage = translationSourceLanguage,
             translationTargetLanguage = translationTargetLanguage,
             performanceProfile = performanceProfile,
+            autonomousCaptureEnabled = autonomousCaptureEnabled,
+            autonomousCaptureAllowlist = autonomousCaptureAllowlist,
             fullText = viewModel.fullText,
             onCopyText = { clipboardManager.setText(AnnotatedString(viewModel.fullText)) },
             onClearTranscription = { viewModel.clearTranscription() },
@@ -391,6 +397,9 @@ fun TranscriptionScreen(viewModel: TranscriptionViewModel, onChangeModel: () -> 
             onSourceLanguageChange = { viewModel.setTranslationSourceLanguageCode(it) },
             onTargetLanguageChange = { viewModel.setTranslationTargetLanguageCode(it) },
             onPerformanceProfileChange = { viewModel.setPerformanceProfile(it) },
+            onAutonomousCaptureEnabledChange = { viewModel.setAutonomousCaptureEnabled(it) },
+            onAutonomousCaptureAllowlistChange = { viewModel.setAutonomousCaptureAllowlist(it) },
+            onOpenAccessibilitySettings = { context.startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)) },
             onDismiss = { showSettings = false }
         )
     }
@@ -610,6 +619,8 @@ private fun SettingsBottomSheet(
     translationSourceLanguage: String,
     translationTargetLanguage: String,
     performanceProfile: PerformanceProfile,
+    autonomousCaptureEnabled: Boolean,
+    autonomousCaptureAllowlist: Set<String>,
     fullText: String,
     onCopyText: () -> Unit,
     onClearTranscription: () -> Unit,
@@ -620,6 +631,9 @@ private fun SettingsBottomSheet(
     onSourceLanguageChange: (String) -> Unit,
     onTargetLanguageChange: (String) -> Unit,
     onPerformanceProfileChange: (PerformanceProfile) -> Unit,
+    onAutonomousCaptureEnabledChange: (Boolean) -> Unit,
+    onAutonomousCaptureAllowlistChange: (Set<String>) -> Unit,
+    onOpenAccessibilitySettings: () -> Unit,
     onDismiss: () -> Unit
 ) {
     val sheetState = androidx.compose.material3.rememberModalBottomSheetState()
@@ -662,6 +676,40 @@ private fun SettingsBottomSheet(
                     Spacer(modifier = Modifier.width(4.dp))
                     Text("Clear")
                 }
+            }
+
+            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+            Text(
+                text = "Autonomous Capture",
+                style = MaterialTheme.typography.titleSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text("Enable allowlisted capture")
+                Switch(checked = autonomousCaptureEnabled, onCheckedChange = onAutonomousCaptureEnabledChange)
+            }
+            var capturePackagesText by remember(autonomousCaptureAllowlist) {
+                mutableStateOf(autonomousCaptureAllowlist.sorted().joinToString(", "))
+            }
+            OutlinedTextField(
+                value = capturePackagesText,
+                onValueChange = { capturePackagesText = it },
+                label = { Text("Allowlisted package IDs") },
+                supportingText = { Text("Comma-separated. Password, banking and authenticator apps remain excluded.") },
+                modifier = Modifier.fillMaxWidth(),
+                singleLine = false
+            )
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                TextButton(onClick = {
+                    onAutonomousCaptureAllowlistChange(
+                        capturePackagesText.split(',').map { it.trim() }.filter { it.isNotBlank() }.toSet()
+                    )
+                }) { Text("Save allowlist") }
+                TextButton(onClick = onOpenAccessibilitySettings) { Text("Accessibility settings") }
             }
 
             HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))

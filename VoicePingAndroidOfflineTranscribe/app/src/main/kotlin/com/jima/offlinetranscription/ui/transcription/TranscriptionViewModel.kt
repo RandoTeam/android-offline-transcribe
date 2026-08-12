@@ -39,6 +39,8 @@ class TranscriptionViewModel(
     val e2eResult = engine.e2eResult
     val performanceProfile = engine.performanceProfile
     val executionProviderStatus = engine.executionProviderStatus
+    val autonomousCaptureEnabled = engine.autonomousCaptureEnabled
+    val autonomousCaptureAllowlist = engine.autonomousCaptureAllowlist
 
     // Translation state
     val translationEnabled = engine.translationEnabled
@@ -155,6 +157,14 @@ class TranscriptionViewModel(
 
     fun setPerformanceProfile(profile: PerformanceProfile) {
         launchEngineAction { engine.setPerformanceProfile(profile) }
+    }
+
+    fun setAutonomousCaptureEnabled(enabled: Boolean) {
+        launchEngineAction { engine.setAutonomousCaptureEnabled(enabled) }
+    }
+
+    fun setAutonomousCaptureAllowlist(packages: Set<String>) {
+        launchEngineAction { engine.setAutonomousCaptureAllowlist(packages) }
     }
 
     fun setTranslationEnabled(enabled: Boolean) {
