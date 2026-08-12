@@ -83,7 +83,11 @@ import com.voiceping.offlinetranscription.util.FormatUtils
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TranscriptionScreen(viewModel: TranscriptionViewModel, onChangeModel: () -> Unit = {}) {
+fun TranscriptionScreen(
+    viewModel: TranscriptionViewModel,
+    onChangeModel: () -> Unit = {},
+    onOpenHistory: () -> Unit = {},
+) {
     val context = LocalContext.current
     var pendingPermissionStart by remember { mutableStateOf(false) }
     val projectionManager = remember(context) {
@@ -393,6 +397,7 @@ fun TranscriptionScreen(viewModel: TranscriptionViewModel, onChangeModel: () -> 
                 showSettings = false
                 onChangeModel()
             },
+            onOpenHistory = onOpenHistory,
             onVADChange = { viewModel.setUseVAD(it) },
             onTimestampsChange = { viewModel.setEnableTimestamps(it) },
             onTranslationEnabledChange = { viewModel.setTranslationEnabled(it) },
@@ -629,6 +634,7 @@ private fun SettingsBottomSheet(
     onCopyText: () -> Unit,
     onClearTranscription: () -> Unit,
     onChangeModel: () -> Unit,
+    onOpenHistory: () -> Unit,
     onVADChange: (Boolean) -> Unit,
     onTimestampsChange: (Boolean) -> Unit,
     onTranslationEnabledChange: (Boolean) -> Unit,
@@ -776,6 +782,11 @@ private fun SettingsBottomSheet(
                 Spacer(modifier = Modifier.width(4.dp))
                 Text("Change Model")
             }
+
+            OutlinedButton(
+                onClick = onOpenHistory,
+                modifier = Modifier.fillMaxWidth().padding(top = 8.dp)
+            ) { Text("Open History") }
 
             HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp))
 

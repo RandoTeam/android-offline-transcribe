@@ -13,6 +13,8 @@ import android.os.Build
 import android.os.SystemClock
 import android.util.Log
 import com.voiceping.offlinetranscription.data.AppPreferences
+import com.voiceping.offlinetranscription.history.TranscriptHistoryEntry
+import com.voiceping.offlinetranscription.history.TranscriptHistoryRepository
 import com.voiceping.offlinetranscription.model.AudioInputMode
 import com.voiceping.offlinetranscription.model.AppError
 import com.voiceping.offlinetranscription.model.EngineType
@@ -47,7 +49,8 @@ enum class SessionState {
 
 class WhisperEngine(
     private val context: Context,
-    private val preferences: AppPreferences
+    private val preferences: AppPreferences,
+    private val transcriptHistory: TranscriptHistoryRepository,
 ) {
     // NOTE: Cactus Android SDK hardcodes its own model cache under `filesDir/models/<slug>`.
     // Our app models must not share that namespace, otherwise Cactus will see our
@@ -679,6 +682,10 @@ class WhisperEngine(
             }
         }
         stopMicrophoneForegroundService()
+        persistTranscriptIfMeaningful(
+            source = if (_audioInputMode.value == AudioInputMode.MICROPHONE) "Microphone" else "System playback",
+            durationMillis = (recordingDurationSeconds * 1000).toLong()
+        )
 
         // Now invalidate and clean up
         invalidateSession()
@@ -954,6 +961,13 @@ class WhisperEngine(
 
                 // Write E2E evidence result
                 val transcript = _confirmedText.value
+                if (!skipped) {
+                    persistTranscriptIfMeaningful(
+                        source = "File",
+                        durationMillis = (durationSec * 1000).toLong(),
+                        language = languageHint
+                    )
+                }
                 e2eOrchestrator.writeResult(
                     transcript = transcript,
                     durationMs = if (skipped) 0.0 else elapsed * 1000,
@@ -1281,6 +1295,31 @@ class WhisperEngine(
             val right = (left + 1).coerceAtMost(samples.lastIndex)
             val fraction = (source - left).toFloat()
             samples[left] + (samples[right] - samples[left]) * fraction
+        }
+    }
+
+    private fun persistTranscriptIfMeaningful(
+        source: String,
+        durationMillis: Long,
+        language: String = _liveLanguageHint.value,
+    ) {
+        val text = fullTranscriptionText.trim()
+        if (text.isBlank()) return
+        val model = _selectedModel.value
+        scope.launch(Dispatchers.IO) {
+            runCatching {
+                transcriptHistory.save(
+                    TranscriptHistoryEntry(
+                        createdAtMillis = System.currentTimeMillis(),
+                        durationMillis = durationMillis,
+                        source = source,
+                        modelId = model.id,
+                        backend = model.inferenceMethod,
+                        language = language,
+                        transcript = text,
+                    )
+                )
+            }.onFailure { Log.w("WhisperEngine", "Unable to persist transcript history", it) }
         }
     }
 

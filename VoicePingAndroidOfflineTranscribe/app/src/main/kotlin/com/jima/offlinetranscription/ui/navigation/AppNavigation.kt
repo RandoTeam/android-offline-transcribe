@@ -14,10 +14,12 @@ import com.voiceping.offlinetranscription.ui.setup.ModelSetupViewModel
 import com.voiceping.offlinetranscription.ui.transcription.TranscriptionScreen
 import com.voiceping.offlinetranscription.ui.transcription.TranscriptionViewModel
 import com.voiceping.offlinetranscription.model.ModelState
+import com.voiceping.offlinetranscription.ui.history.HistoryScreen
 
 object Routes {
     const val SETUP = "setup"
     const val TRANSCRIBE = "transcribe"
+    const val HISTORY = "history"
 }
 
 @Composable
@@ -59,8 +61,12 @@ fun AppNavigation(
                     navController.navigate(Routes.SETUP) {
                         popUpTo(Routes.TRANSCRIBE) { inclusive = true }
                     }
-                }
+                },
+                onOpenHistory = { navController.navigate(Routes.HISTORY) }
             )
+        }
+        composable(Routes.HISTORY) {
+            HistoryScreen(onBack = { navController.popBackStack() })
         }
     }
 }

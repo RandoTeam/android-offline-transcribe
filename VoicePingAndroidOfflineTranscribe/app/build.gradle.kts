@@ -2,6 +2,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.ksp)
 }
 
 android {
@@ -89,6 +90,11 @@ dependencies {
     // Lifecycle
     implementation(libs.lifecycle.viewmodel)
     implementation(libs.lifecycle.runtime)
+
+    // Local searchable transcript history
+    implementation(libs.room.runtime)
+    implementation(libs.room.ktx)
+    ksp(libs.room.compiler)
 
     // OkHttp
     implementation(libs.okhttp)
