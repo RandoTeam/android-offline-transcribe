@@ -38,6 +38,7 @@ class TranscriptionViewModel(
     val memoryMB = engine.memoryMB
     val e2eResult = engine.e2eResult
     val performanceProfile = engine.performanceProfile
+    val executionProviderStatus = engine.executionProviderStatus
 
     // Translation state
     val translationEnabled = engine.translationEnabled

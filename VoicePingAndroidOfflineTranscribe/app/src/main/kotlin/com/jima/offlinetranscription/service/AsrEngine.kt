@@ -1,6 +1,7 @@
 package com.voiceping.offlinetranscription.service
 
 import com.voiceping.offlinetranscription.model.EngineCapabilities
+import com.voiceping.offlinetranscription.model.ExecutionProviderStatus
 
 /**
  * Abstraction over different ASR backends (whisper.cpp, sherpa-onnx offline, sherpa-onnx streaming).
@@ -9,6 +10,8 @@ import com.voiceping.offlinetranscription.model.EngineCapabilities
 interface AsrEngine {
     /** Capabilities exposed by this concrete backend, never inferred by the UI from a model id. */
     val capabilities: EngineCapabilities get() = EngineCapabilities.NONE
+    /** Runtime truth for diagnostics; requested acceleration is never treated as actual execution. */
+    val executionProviderStatus: ExecutionProviderStatus get() = ExecutionProviderStatus()
     /** Load a model from the given directory/file path. Returns true on success. */
     suspend fun loadModel(modelPath: String): Boolean
 

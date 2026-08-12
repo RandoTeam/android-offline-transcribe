@@ -15,6 +15,7 @@ import com.voiceping.offlinetranscription.model.EngineType
 import com.voiceping.offlinetranscription.model.ModelInfo
 import com.voiceping.offlinetranscription.model.ModelState
 import com.voiceping.offlinetranscription.model.PerformanceProfile
+import com.voiceping.offlinetranscription.model.ExecutionProviderStatus
 import com.voiceping.offlinetranscription.util.TextNormalizationUtils
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
@@ -60,6 +61,8 @@ class WhisperEngine(
 
     private val _selectedModel = MutableStateFlow(ModelInfo.defaultModel)
     val selectedModel: StateFlow<ModelInfo> = _selectedModel.asStateFlow()
+    private val _executionProviderStatus = MutableStateFlow(ExecutionProviderStatus())
+    val executionProviderStatus: StateFlow<ExecutionProviderStatus> = _executionProviderStatus.asStateFlow()
 
     private val _performanceProfile = MutableStateFlow(PerformanceProfile.BALANCED)
     val performanceProfile: StateFlow<PerformanceProfile> = _performanceProfile.asStateFlow()
@@ -338,6 +341,7 @@ class WhisperEngine(
             if (!success) throw Exception("Failed to load model")
             downloader.markManagedModelReady(model)
             currentEngine = engine
+            _executionProviderStatus.value = engine.executionProviderStatus
             prewarmedModelId = null
             _modelState.value = ModelState.Loaded
         } catch (e: Throwable) {
@@ -349,6 +353,7 @@ class WhisperEngine(
         resetTranscriptionState()
         currentEngine?.release()
         currentEngine = null
+        _executionProviderStatus.value = ExecutionProviderStatus()
         prewarmedModelId = null
         _modelState.value = ModelState.Unloaded
     }

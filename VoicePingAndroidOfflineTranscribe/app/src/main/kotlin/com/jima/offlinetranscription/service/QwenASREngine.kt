@@ -1,6 +1,7 @@
 package com.voiceping.offlinetranscription.service
 
 import android.util.Log
+import com.voiceping.offlinetranscription.model.ExecutionProviderStatus
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.util.concurrent.locks.ReentrantLock
@@ -45,6 +46,8 @@ class QwenASREngine : AsrEngine {
     private val lock = ReentrantLock()
 
     override val isLoaded: Boolean get() = loaded
+    override val executionProviderStatus: ExecutionProviderStatus
+        get() = ExecutionProviderStatus(diagnostic = "Native C/NEON CPU backend.")
 
     override suspend fun loadModel(modelPath: String): Boolean {
         return withContext(Dispatchers.IO) {

@@ -199,6 +199,7 @@ fun TranscriptionScreen(viewModel: TranscriptionViewModel, onChangeModel: () -> 
     val translationSourceLanguage by viewModel.translationSourceLanguage.collectAsState()
     val translationTargetLanguage by viewModel.translationTargetLanguage.collectAsState()
     val performanceProfile by viewModel.performanceProfile.collectAsState()
+    val executionProviderStatus by viewModel.executionProviderStatus.collectAsState()
 
     var showSettings by remember { mutableStateOf(false) }
     val clipboardManager = LocalClipboardManager.current
@@ -303,6 +304,12 @@ fun TranscriptionScreen(viewModel: TranscriptionViewModel, onChangeModel: () -> 
                 }
 
                 ResourceStatsBar(viewModel, isRecording, elapsedSeconds)
+                Text(
+                    text = "Provider: requested ${executionProviderStatus.requested} · actual ${executionProviderStatus.actual}",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 2.dp)
+                )
             }
 
             ControlButtonsRow(
