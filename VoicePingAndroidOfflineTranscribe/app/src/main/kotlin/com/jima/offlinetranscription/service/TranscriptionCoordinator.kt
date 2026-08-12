@@ -610,7 +610,7 @@ class TranscriptionCoordinator(
     // MARK: - Utilities
 
     private fun computeInferenceThreads(): Int {
-        return Runtime.getRuntime().availableProcessors().coerceAtMost(4).coerceAtLeast(1)
+        return engine.inferenceThreadCount()
     }
 
     // MARK: - State Reset

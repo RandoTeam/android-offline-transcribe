@@ -14,6 +14,7 @@ import com.voiceping.offlinetranscription.model.AppError
 import com.voiceping.offlinetranscription.model.EngineType
 import com.voiceping.offlinetranscription.model.ModelInfo
 import com.voiceping.offlinetranscription.model.ModelState
+import com.voiceping.offlinetranscription.model.PerformanceProfile
 import com.voiceping.offlinetranscription.util.TextNormalizationUtils
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
@@ -59,6 +60,9 @@ class WhisperEngine(
 
     private val _selectedModel = MutableStateFlow(ModelInfo.defaultModel)
     val selectedModel: StateFlow<ModelInfo> = _selectedModel.asStateFlow()
+
+    private val _performanceProfile = MutableStateFlow(PerformanceProfile.BALANCED)
+    val performanceProfile: StateFlow<PerformanceProfile> = _performanceProfile.asStateFlow()
 
     // Session state machine
     private val _sessionState = MutableStateFlow(SessionState.Idle)
@@ -178,6 +182,8 @@ class WhisperEngine(
     internal fun updateTokensPerSecond(value: Double) { _tokensPerSecond.value = value }
     internal fun updateBufferEnergy(energy: List<Float>) { _bufferEnergy.value = energy }
     internal fun updateBufferSeconds(seconds: Double) { _bufferSeconds.value = seconds }
+    internal fun inferenceThreadCount(): Int =
+        _performanceProfile.value.recommendedCpuThreads(Runtime.getRuntime().availableProcessors())
 
     internal fun onTranscriptionError(error: AppError) {
         _lastError.value = error
@@ -223,6 +229,12 @@ class WhisperEngine(
         }
         scope.launch {
             preferences.enableTimestamps.collect { _enableTimestamps.value = it }
+        }
+        scope.launch {
+            preferences.performanceProfile.collect { saved ->
+                _performanceProfile.value = runCatching { PerformanceProfile.valueOf(saved) }
+                    .getOrDefault(PerformanceProfile.BALANCED)
+            }
         }
         scope.launch {
             preferences.translationEnabled.collect { enabled ->
@@ -447,6 +459,11 @@ class WhisperEngine(
     suspend fun setEnableTimestamps(enabled: Boolean) {
         _enableTimestamps.value = enabled
         preferences.setEnableTimestamps(enabled)
+    }
+
+    suspend fun setPerformanceProfile(profile: PerformanceProfile) {
+        _performanceProfile.value = profile
+        preferences.setPerformanceProfile(profile.name)
     }
 
     suspend fun setTranslationEnabled(enabled: Boolean) {
@@ -831,7 +848,7 @@ class WhisperEngine(
                 _bufferEnergy.value = audioRecorder.relativeEnergy
 
                 val startTime = System.nanoTime()
-                val numThreads = Runtime.getRuntime().availableProcessors().coerceAtMost(4).coerceAtLeast(1)
+                val numThreads = inferenceThreadCount()
                 Log.i("WhisperEngine", "transcribeFile: starting transcription with $numThreads threads")
                 val segments = if (engine is AndroidSpeechEngine && Build.VERSION.SDK_INT < 33 && e2eLocked) {
                     // On API < 33, SpeechRecognizer can't accept file audio directly.

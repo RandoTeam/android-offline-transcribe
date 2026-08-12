@@ -3,6 +3,8 @@ package com.voiceping.offlinetranscription.service
 import com.voiceping.offlinetranscription.model.EngineType
 import com.voiceping.offlinetranscription.model.ModelInfo
 import com.voiceping.offlinetranscription.model.SherpaModelType
+import com.voiceping.offlinetranscription.model.ExecutionProvider
+import com.voiceping.offlinetranscription.model.PerformanceProfile
 import org.junit.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -87,6 +89,23 @@ class AsrEngineTest {
             override fun release() {}
         }
         assertFalse(engine.isStreaming)
+    }
+
+    @Test
+    fun modelCapabilities_areDeclaredWithoutModelSpecificUiBranches() {
+        val qwen = ModelInfo.findByIdOrLegacy("qwen3-asr-0.6b-onnx")!!
+        assertTrue(qwen.capabilities.languageAutoDetection)
+        assertTrue(qwen.capabilities.forcedLanguage)
+        assertEquals("INT8", qwen.capabilities.quantization)
+        assertTrue(ExecutionProvider.CPU in qwen.capabilities.executionProviders)
+    }
+
+    @Test
+    fun performanceProfiles_deriveSafeThreadCountsFromDeviceTopology() {
+        assertEquals(1, PerformanceProfile.ECO.recommendedCpuThreads(1))
+        assertEquals(4, PerformanceProfile.BALANCED.recommendedCpuThreads(6))
+        assertEquals(6, PerformanceProfile.MAX_PERFORMANCE.recommendedCpuThreads(6))
+        assertEquals(6, PerformanceProfile.BENCHMARK.recommendedCpuThreads(6))
     }
 
     @Test

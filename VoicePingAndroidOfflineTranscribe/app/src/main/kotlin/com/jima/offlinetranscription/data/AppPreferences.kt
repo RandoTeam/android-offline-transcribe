@@ -23,6 +23,7 @@ class AppPreferences(private val context: Context) {
         private val TRANSLATION_ENABLED = booleanPreferencesKey("translation_enabled")
         private val TRANSLATION_SOURCE_LANGUAGE = stringPreferencesKey("translation_source_language")
         private val TRANSLATION_TARGET_LANGUAGE = stringPreferencesKey("translation_target_language")
+        private val PERFORMANCE_PROFILE = stringPreferencesKey("performance_profile")
     }
 
     private val preferencesData = context.dataStore.data
@@ -40,6 +41,7 @@ class AppPreferences(private val context: Context) {
     val translationEnabled: Flow<Boolean> = preferenceFlow { it[TRANSLATION_ENABLED] ?: false }
     val translationSourceLanguage: Flow<String> = preferenceFlow { it[TRANSLATION_SOURCE_LANGUAGE] ?: "en" }
     val translationTargetLanguage: Flow<String> = preferenceFlow { it[TRANSLATION_TARGET_LANGUAGE] ?: "ja" }
+    val performanceProfile: Flow<String> = preferenceFlow { it[PERFORMANCE_PROFILE] ?: "BALANCED" }
 
     suspend fun setSelectedModelId(id: String) {
         context.dataStore.edit { it[SELECTED_MODEL_ID] = id }
@@ -69,5 +71,9 @@ class AppPreferences(private val context: Context) {
     suspend fun setTranslationTargetLanguage(languageCode: String) {
         val normalized = languageCode.trim().lowercase(Locale.ROOT).ifEmpty { "ja" }
         context.dataStore.edit { it[TRANSLATION_TARGET_LANGUAGE] = normalized }
+    }
+
+    suspend fun setPerformanceProfile(profileName: String) {
+        context.dataStore.edit { it[PERFORMANCE_PROFILE] = profileName }
     }
 }

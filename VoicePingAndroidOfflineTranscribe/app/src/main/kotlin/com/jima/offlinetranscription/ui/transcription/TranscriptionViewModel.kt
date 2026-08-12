@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.voiceping.offlinetranscription.model.AudioInputMode
 import com.voiceping.offlinetranscription.model.ModelInfo
+import com.voiceping.offlinetranscription.model.PerformanceProfile
 import com.voiceping.offlinetranscription.service.WhisperEngine
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
@@ -33,6 +34,7 @@ class TranscriptionViewModel(
     val cpuPercent = engine.cpuPercent
     val memoryMB = engine.memoryMB
     val e2eResult = engine.e2eResult
+    val performanceProfile = engine.performanceProfile
 
     // Translation state
     val translationEnabled = engine.translationEnabled
@@ -131,6 +133,10 @@ class TranscriptionViewModel(
         launchEngineAction {
             engine.setEnableTimestamps(enabled)
         }
+    }
+
+    fun setPerformanceProfile(profile: PerformanceProfile) {
+        launchEngineAction { engine.setPerformanceProfile(profile) }
     }
 
     fun setTranslationEnabled(enabled: Boolean) {

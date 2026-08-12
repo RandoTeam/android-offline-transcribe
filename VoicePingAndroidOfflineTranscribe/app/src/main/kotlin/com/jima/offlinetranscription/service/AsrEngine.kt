@@ -1,10 +1,14 @@
 package com.voiceping.offlinetranscription.service
 
+import com.voiceping.offlinetranscription.model.EngineCapabilities
+
 /**
  * Abstraction over different ASR backends (whisper.cpp, sherpa-onnx offline, sherpa-onnx streaming).
  * Each implementation handles model loading, transcription, and resource cleanup.
  */
 interface AsrEngine {
+    /** Capabilities exposed by this concrete backend, never inferred by the UI from a model id. */
+    val capabilities: EngineCapabilities get() = EngineCapabilities.NONE
     /** Load a model from the given directory/file path. Returns true on success. */
     suspend fun loadModel(modelPath: String): Boolean
 

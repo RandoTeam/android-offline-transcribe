@@ -18,6 +18,9 @@ data class ModelInfo(
     val languages: String = "99 languages",
     val files: List<ModelFile>
 ) {
+    val capabilities: EngineCapabilities
+        get() = capabilitiesFor(engineType, id)
+
     val inferenceMethod: String
         get() = when (engineType) {
             EngineType.SHERPA_ONNX -> "sherpa-onnx offline (ONNX Runtime)"

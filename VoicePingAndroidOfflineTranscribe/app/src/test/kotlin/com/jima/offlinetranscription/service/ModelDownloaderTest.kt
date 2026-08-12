@@ -87,13 +87,14 @@ class ModelDownloaderTest {
     @Test
     fun modelFilePath_returnsPathToFirstFile() {
         val path = downloader.modelFilePath(singleFileModel)
-        assertTrue(path.endsWith("whisper-test/encoder.int8.onnx"), "Expected path ending with whisper-test/encoder.int8.onnx but got $path")
+        val expectedSuffix = File("whisper-test", "encoder.int8.onnx").path
+        assertTrue(path.endsWith(expectedSuffix), "Expected path ending with $expectedSuffix but got $path")
     }
 
     @Test
     fun modelFilePath_forMultiFile_returnsFirstFile() {
         val path = downloader.modelFilePath(multiFileModel)
-        assertTrue(path.endsWith("moonshine-test/preprocess.onnx"))
+        assertTrue(path.endsWith(File("moonshine-test", "preprocess.onnx").path))
     }
 
     // -- isModelDownloaded --
