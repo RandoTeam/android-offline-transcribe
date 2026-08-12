@@ -319,7 +319,7 @@ fun TranscriptionScreen(viewModel: TranscriptionViewModel, onChangeModel: () -> 
 
             ControlButtonsRow(
                 isRecording = isRecording,
-                onPickAudio = { wavPickerLauncher.launch(arrayOf("audio/wav", "audio/x-wav", "audio/wave")) },
+                onPickAudio = { wavPickerLauncher.launch(arrayOf("audio/*", "video/*")) },
                 onRecord = { onRecordClick() },
                 onSettings = { showSettings = true }
             )
@@ -519,7 +519,7 @@ private fun ControlButtonsRow(
         IconButton(
             onClick = onPickAudio,
             enabled = !isRecording,
-            modifier = Modifier.semantics { contentDescription = "Open WAV File" }
+            modifier = Modifier.semantics { contentDescription = "Open audio or video file" }
         ) {
             Icon(
                 Icons.Filled.AudioFile,
