@@ -189,12 +189,14 @@ class WhisperEngine(
         _lastError.value = error
         transitionTo(SessionState.Error)
         audioRecorder.stopRecording()
+        stopMicrophoneForegroundService()
     }
 
     internal fun onNoSignalDetected() {
         _lastError.value = AppError.NoMicrophoneSignal()
         transitionTo(SessionState.Error)
         audioRecorder.stopRecording()
+        stopMicrophoneForegroundService()
         transcriptionCoordinator.cancelTranscriptionJob()
         cancelRecorderAndEnergyJobs()
     }
@@ -587,6 +589,16 @@ class WhisperEngine(
         }
 
         resetTranscriptionState()
+        if (_audioInputMode.value == AudioInputMode.MICROPHONE) {
+            try {
+                context.startForegroundService(Intent(context, TranscriptionForegroundService::class.java))
+            } catch (e: Exception) {
+                Log.e("WhisperEngine", "Unable to start microphone foreground service", e)
+                _lastError.value = AppError.TranscriptionFailed(e)
+                transitionTo(SessionState.Error)
+                return
+            }
+        }
         transitionTo(SessionState.Recording)
 
         val activeSessionToken = nextSessionToken()
@@ -603,8 +615,7 @@ class WhisperEngine(
             } catch (e: Throwable) {
                 if (!isSessionActive(activeSessionToken)) return@launch
                 withContext(Dispatchers.Main) {
-                    _lastError.value = AppError.TranscriptionFailed(e)
-                    transitionTo(SessionState.Error)
+                    onTranscriptionError(AppError.TranscriptionFailed(e))
                 }
             }
         }
@@ -646,6 +657,7 @@ class WhisperEngine(
                 Log.w("WhisperEngine", "Failed to stop MediaProjectionService: ${e.message}")
             }
         }
+        stopMicrophoneForegroundService()
 
         // Now invalidate and clean up
         invalidateSession()
@@ -674,6 +686,7 @@ class WhisperEngine(
                 Log.w("WhisperEngine", "Failed to stop MediaProjectionService: ${e.message}")
             }
         }
+        stopMicrophoneForegroundService()
 
         invalidateSession()
         transcriptionCoordinator.cancelTranscriptionJobAndWait()
@@ -685,6 +698,14 @@ class WhisperEngine(
         energyJob?.cancel()
         recordingJob = null
         energyJob = null
+    }
+
+    private fun stopMicrophoneForegroundService() {
+        try {
+            context.stopService(Intent(context, TranscriptionForegroundService::class.java))
+        } catch (e: Exception) {
+            Log.w("WhisperEngine", "Failed to stop microphone foreground service: ${e.message}")
+        }
     }
 
     private suspend fun cancelRecorderAndEnergyJobsAndWait() {
@@ -745,6 +766,7 @@ class WhisperEngine(
             transcriptionCoordinator.cancelTranscriptionJob()
             cancelRecorderAndEnergyJobs()
         }
+        stopMicrophoneForegroundService()
         fileTranscriptionJob?.cancel()
         fileTranscriptionJob = null
         resetTranscriptionState()
