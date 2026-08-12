@@ -2,6 +2,7 @@ package com.voiceping.offlinetranscription.ui.transcription
 
 import android.content.Context
 import android.content.Intent
+import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.voiceping.offlinetranscription.model.AudioInputMode
@@ -10,6 +11,8 @@ import com.voiceping.offlinetranscription.model.PerformanceProfile
 import com.voiceping.offlinetranscription.service.WhisperEngine
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import java.io.File
 
 class TranscriptionViewModel(
@@ -132,6 +135,20 @@ class TranscriptionViewModel(
     fun setEnableTimestamps(enabled: Boolean) {
         launchEngineAction {
             engine.setEnableTimestamps(enabled)
+        }
+    }
+
+    /** Copies a user-selected WAV into private cache so the decoder never depends on a transient URI grant. */
+    fun transcribeWavUri(context: Context, uri: Uri) {
+        launchEngineAction {
+            val cached = withContext(Dispatchers.IO) {
+                val destination = File(context.cacheDir, "import-${System.currentTimeMillis()}.wav")
+                context.contentResolver.openInputStream(uri)?.use { input ->
+                    destination.outputStream().use { output -> input.copyTo(output) }
+                } ?: throw IllegalArgumentException("Unable to read selected audio file")
+                destination
+            }
+            engine.transcribeFile(cached.absolutePath)
         }
     }
 

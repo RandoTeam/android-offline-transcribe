@@ -91,6 +91,12 @@ fun TranscriptionScreen(viewModel: TranscriptionViewModel, onChangeModel: () -> 
         }
     }
 
+    val wavPickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.OpenDocument()
+    ) { uri ->
+        uri?.let { viewModel.transcribeWavUri(context, it) }
+    }
+
     val mediaProjectionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartActivityForResult()
     ) { result ->
@@ -299,7 +305,7 @@ fun TranscriptionScreen(viewModel: TranscriptionViewModel, onChangeModel: () -> 
 
             ControlButtonsRow(
                 isRecording = isRecording,
-                onTestAudio = { viewModel.transcribeTestAsset(context) },
+                onPickAudio = { wavPickerLauncher.launch(arrayOf("audio/wav", "audio/x-wav", "audio/wave")) },
                 onRecord = { onRecordClick() },
                 onSettings = { showSettings = true }
             )
@@ -476,7 +482,7 @@ private fun TranscriptionTextDisplay(
 @Composable
 private fun ControlButtonsRow(
     isRecording: Boolean,
-    onTestAudio: () -> Unit,
+    onPickAudio: () -> Unit,
     onRecord: () -> Unit,
     onSettings: () -> Unit
 ) {
@@ -488,9 +494,9 @@ private fun ControlButtonsRow(
         verticalAlignment = Alignment.CenterVertically
     ) {
         IconButton(
-            onClick = onTestAudio,
+            onClick = onPickAudio,
             enabled = !isRecording,
-            modifier = Modifier.semantics { contentDescription = "Test Audio File" }
+            modifier = Modifier.semantics { contentDescription = "Open WAV File" }
         ) {
             Icon(
                 Icons.Filled.AudioFile,
