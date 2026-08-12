@@ -109,6 +109,8 @@ class WhisperEngine(
 
     private val _audioInputMode = MutableStateFlow(AudioInputMode.MICROPHONE)
     val audioInputMode: StateFlow<AudioInputMode> = _audioInputMode.asStateFlow()
+    private val _liveLanguageHint = MutableStateFlow("auto")
+    val liveLanguageHint: StateFlow<String> = _liveLanguageHint.asStateFlow()
 
     private val _systemAudioCaptureReady = MutableStateFlow(false)
     val systemAudioCaptureReady: StateFlow<Boolean> = _systemAudioCaptureReady.asStateFlow()
@@ -740,6 +742,11 @@ class WhisperEngine(
 
     fun setAudioInputMode(mode: AudioInputMode) {
         _audioInputMode.value = mode
+    }
+
+    /** Applies to the shared live-session pipeline; `auto` preserves model detection. */
+    fun setLiveLanguageHint(languageCode: String?) {
+        _liveLanguageHint.value = normalizeLanguageCode(languageCode) ?: "auto"
     }
 
     fun setSystemAudioCapturePermission(resultCode: Int, data: Intent?) {

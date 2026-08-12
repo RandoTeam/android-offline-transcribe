@@ -52,6 +52,16 @@
         </service>
 
         <service
+            android:name=".service.OfflineRecognitionService"
+            android:label="Offline Transcribe Lab"
+            android:permission="android.permission.BIND_SPEECH_RECOGNITION_SERVICE"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.speech.RecognitionService" />
+            </intent-filter>
+        </service>
+
+        <service
             android:name=".timeline.AutonomousCaptureService"
             android:label="Offline Transcribe Lab Autonomous Capture"
             android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE"

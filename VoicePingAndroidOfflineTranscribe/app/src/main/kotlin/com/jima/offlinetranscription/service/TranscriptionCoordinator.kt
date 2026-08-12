@@ -413,7 +413,7 @@ class TranscriptionCoordinator(
             return
         }
         val newSegments = try {
-            asrEngine.transcribe(audioSamples, numThreads, "auto")
+            asrEngine.transcribe(audioSamples, numThreads, engine.liveLanguageHint.value)
         } finally {
             inferenceMutex.unlock()
         }
@@ -495,7 +495,7 @@ class TranscriptionCoordinator(
 
         lastBufferSize = currentBufferSize
         val numThreads = computeInferenceThreads()
-        val newSegments = asrEngine.transcribe(audioSamples, numThreads, "auto")
+        val newSegments = asrEngine.transcribe(audioSamples, numThreads, engine.liveLanguageHint.value)
         if (newSegments.isNotEmpty()) {
             engine.chunkManager.processTranscriptionResult(newSegments, slice.sliceOffsetMs)
             engine.updateConfirmedText(engine.chunkManager.confirmedText)
