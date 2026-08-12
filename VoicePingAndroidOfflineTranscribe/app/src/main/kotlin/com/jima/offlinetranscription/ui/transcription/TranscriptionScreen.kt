@@ -203,6 +203,7 @@ fun TranscriptionScreen(viewModel: TranscriptionViewModel, onChangeModel: () -> 
     val performanceProfile by viewModel.performanceProfile.collectAsState()
     val executionProviderStatus by viewModel.executionProviderStatus.collectAsState()
     val autonomousCaptureEnabled by viewModel.autonomousCaptureEnabled.collectAsState(initial = false)
+    val autonomousCapturePaused by viewModel.autonomousCapturePaused.collectAsState(initial = false)
     val autonomousCaptureAllowlist by viewModel.autonomousCaptureAllowlist.collectAsState(initial = emptySet())
 
     var showSettings by remember { mutableStateOf(false) }
@@ -382,6 +383,7 @@ fun TranscriptionScreen(viewModel: TranscriptionViewModel, onChangeModel: () -> 
             translationTargetLanguage = translationTargetLanguage,
             performanceProfile = performanceProfile,
             autonomousCaptureEnabled = autonomousCaptureEnabled,
+            autonomousCapturePaused = autonomousCapturePaused,
             autonomousCaptureAllowlist = autonomousCaptureAllowlist,
             fullText = viewModel.fullText,
             onCopyText = { clipboardManager.setText(AnnotatedString(viewModel.fullText)) },
@@ -398,6 +400,7 @@ fun TranscriptionScreen(viewModel: TranscriptionViewModel, onChangeModel: () -> 
             onTargetLanguageChange = { viewModel.setTranslationTargetLanguageCode(it) },
             onPerformanceProfileChange = { viewModel.setPerformanceProfile(it) },
             onAutonomousCaptureEnabledChange = { viewModel.setAutonomousCaptureEnabled(it) },
+            onAutonomousCapturePausedChange = { viewModel.setAutonomousCapturePaused(it) },
             onAutonomousCaptureAllowlistChange = { viewModel.setAutonomousCaptureAllowlist(it) },
             onOpenAccessibilitySettings = { context.startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)) },
             onDismiss = { showSettings = false }
@@ -620,6 +623,7 @@ private fun SettingsBottomSheet(
     translationTargetLanguage: String,
     performanceProfile: PerformanceProfile,
     autonomousCaptureEnabled: Boolean,
+    autonomousCapturePaused: Boolean,
     autonomousCaptureAllowlist: Set<String>,
     fullText: String,
     onCopyText: () -> Unit,
@@ -632,6 +636,7 @@ private fun SettingsBottomSheet(
     onTargetLanguageChange: (String) -> Unit,
     onPerformanceProfileChange: (PerformanceProfile) -> Unit,
     onAutonomousCaptureEnabledChange: (Boolean) -> Unit,
+    onAutonomousCapturePausedChange: (Boolean) -> Unit,
     onAutonomousCaptureAllowlistChange: (Set<String>) -> Unit,
     onOpenAccessibilitySettings: () -> Unit,
     onDismiss: () -> Unit
@@ -691,6 +696,18 @@ private fun SettingsBottomSheet(
             ) {
                 Text("Enable allowlisted capture")
                 Switch(checked = autonomousCaptureEnabled, onCheckedChange = onAutonomousCaptureEnabledChange)
+            }
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(if (autonomousCapturePaused) "Capture paused" else "Pause capture")
+                Switch(
+                    checked = autonomousCapturePaused,
+                    enabled = autonomousCaptureEnabled,
+                    onCheckedChange = onAutonomousCapturePausedChange
+                )
             }
             var capturePackagesText by remember(autonomousCaptureAllowlist) {
                 mutableStateOf(autonomousCaptureAllowlist.sorted().joinToString(", "))

@@ -64,6 +64,7 @@ class WhisperEngine(
     private val _executionProviderStatus = MutableStateFlow(ExecutionProviderStatus())
     val executionProviderStatus: StateFlow<ExecutionProviderStatus> = _executionProviderStatus.asStateFlow()
     val autonomousCaptureEnabled: Flow<Boolean> get() = preferences.autonomousCaptureEnabled
+    val autonomousCapturePaused: Flow<Boolean> get() = preferences.autonomousCapturePaused
     val autonomousCaptureAllowlist: Flow<Set<String>> get() = preferences.autonomousCaptureAllowlist
 
     private val _performanceProfile = MutableStateFlow(PerformanceProfile.BALANCED)
@@ -476,6 +477,8 @@ class WhisperEngine(
     }
 
     suspend fun setAutonomousCaptureEnabled(enabled: Boolean) = preferences.setAutonomousCaptureEnabled(enabled)
+
+    suspend fun setAutonomousCapturePaused(paused: Boolean) = preferences.setAutonomousCapturePaused(paused)
 
     suspend fun setAutonomousCaptureAllowlist(packages: Set<String>) =
         preferences.setAutonomousCaptureAllowlist(packages)

@@ -40,6 +40,7 @@ class TranscriptionViewModel(
     val performanceProfile = engine.performanceProfile
     val executionProviderStatus = engine.executionProviderStatus
     val autonomousCaptureEnabled = engine.autonomousCaptureEnabled
+    val autonomousCapturePaused = engine.autonomousCapturePaused
     val autonomousCaptureAllowlist = engine.autonomousCaptureAllowlist
 
     // Translation state
@@ -161,6 +162,10 @@ class TranscriptionViewModel(
 
     fun setAutonomousCaptureEnabled(enabled: Boolean) {
         launchEngineAction { engine.setAutonomousCaptureEnabled(enabled) }
+    }
+
+    fun setAutonomousCapturePaused(paused: Boolean) {
+        launchEngineAction { engine.setAutonomousCapturePaused(paused) }
     }
 
     fun setAutonomousCaptureAllowlist(packages: Set<String>) {
