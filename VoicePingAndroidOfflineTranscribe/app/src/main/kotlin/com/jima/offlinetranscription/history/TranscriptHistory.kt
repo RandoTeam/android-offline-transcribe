@@ -33,6 +33,17 @@ interface TranscriptHistoryDao {
     @Query("SELECT * FROM transcript_history ORDER BY createdAtMillis DESC")
     fun observeAll(): Flow<List<TranscriptHistoryEntry>>
 
+    @Query("""
+        SELECT * FROM transcript_history
+        WHERE transcript LIKE '%' || :query || '%'
+           OR modelId LIKE '%' || :query || '%'
+           OR backend LIKE '%' || :query || '%'
+           OR source LIKE '%' || :query || '%'
+           OR language LIKE '%' || :query || '%'
+        ORDER BY createdAtMillis DESC
+    """)
+    fun search(query: String): Flow<List<TranscriptHistoryEntry>>
+
     @Query("DELETE FROM transcript_history WHERE id = :id")
     suspend fun delete(id: String)
 }
@@ -52,6 +63,7 @@ abstract class TranscriptHistoryDatabase : RoomDatabase() {
 
 class TranscriptHistoryRepository(private val dao: TranscriptHistoryDao) {
     val entries: Flow<List<TranscriptHistoryEntry>> = dao.observeAll()
+    fun search(query: String): Flow<List<TranscriptHistoryEntry>> = dao.search(query.trim())
     suspend fun save(entry: TranscriptHistoryEntry) = dao.insert(entry)
     suspend fun delete(id: String) = dao.delete(id)
 }

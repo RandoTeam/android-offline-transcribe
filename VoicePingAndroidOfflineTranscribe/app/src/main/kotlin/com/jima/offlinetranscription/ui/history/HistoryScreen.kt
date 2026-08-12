@@ -12,12 +12,16 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
@@ -30,24 +34,36 @@ import java.util.Date
 @Composable
 fun HistoryScreen(onBack: () -> Unit) {
     val app = LocalContext.current.applicationContext as OfflineTranscriptionApp
-    val entries by app.transcriptHistory.entries.collectAsState(initial = emptyList())
+    var query by remember { mutableStateOf("") }
+    val entries by (if (query.isBlank()) app.transcriptHistory.entries else app.transcriptHistory.search(query))
+        .collectAsState(initial = emptyList())
     Scaffold(topBar = {
         TopAppBar(
             title = { Text("History") },
             navigationIcon = { TextButton(onClick = onBack) { Text("Back") } }
         )
     }) { padding ->
-        if (entries.isEmpty()) {
-            Column(
-                modifier = Modifier.fillMaxSize().padding(padding).padding(24.dp),
-                verticalArrangement = Arrangement.Center
-            ) {
-                Text("No saved transcripts yet.", style = MaterialTheme.typography.titleMedium)
-                Text("Completed microphone, system-audio and file transcriptions are saved locally here.")
-            }
-        } else {
-            LazyColumn(contentPadding = PaddingValues(12.dp), modifier = Modifier.padding(padding)) {
-                items(entries, key = { it.id }) { entry -> HistoryCard(entry) }
+        Column(modifier = Modifier.fillMaxSize().padding(padding)) {
+            OutlinedTextField(
+                value = query,
+                onValueChange = { query = it },
+                label = { Text("Search local history") },
+                supportingText = { Text("Transcript, model, backend, source or language") },
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp),
+                singleLine = true
+            )
+            if (entries.isEmpty()) {
+                Column(
+                    modifier = Modifier.fillMaxSize().padding(24.dp),
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    Text(if (query.isBlank()) "No saved transcripts yet." else "No matching local transcripts.", style = MaterialTheme.typography.titleMedium)
+                    Text("Completed microphone, system-audio and file transcriptions are saved locally here.")
+                }
+            } else {
+                LazyColumn(contentPadding = PaddingValues(horizontal = 12.dp), modifier = Modifier.fillMaxSize()) {
+                    items(entries, key = { it.id }) { entry -> HistoryCard(entry) }
+                }
             }
         }
     }
